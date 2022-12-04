@@ -7,7 +7,7 @@ import { SidebarItems } from './SidebarItems';
 
 const menuItems: string[] = ['Inbox', 'Starred', 'Send Email', 'Drafts'];
 
-export const Sidebar = () => {
+export const Sidebar = (): JSX.Element => {
   const { sidebarOpen, isOpenSidebar } = useContext(UIContext);
 
   return (

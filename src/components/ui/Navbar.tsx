@@ -5,7 +5,7 @@ import MenuOutlinedIcon from '@mui/icons-material/MenuOutlined';
 
 import { UIContext } from '../../context/ui';
 
-export const Navbar = () => {
+export const Navbar = (): JSX.Element => {
   const { isOpenSidebar } = useContext(UIContext);
 
   return (
