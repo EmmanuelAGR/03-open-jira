@@ -1,51 +1,92 @@
 import { Dispatch } from 'react';
 
-import { v4 as uuidv4 } from 'uuid';
+import { SnackbarMessage, OptionsObject, SnackbarKey } from 'notistack';
 
+import { entriesApi } from '../apis';
 import { EntriesActionType, EntriesState } from '../context/entries';
 import { IEntry } from '../interfaces';
 
 export const INITIAL_STATE: EntriesState = {
-  entries: [
-    {
-      _id: uuidv4(),
-      description:
-        'Pending: Officia ipsum qui occaecat enim duis nulla veniam labore excepteur in magna eiusmod proident.',
-      status: 'pending',
-      createdAt: Date.now(),
-    },
-    {
-      _id: uuidv4(),
-      description:
-        'In-Progress: Ea cupidatat in nostrud proident duis consectetur velit est.',
-      status: 'in-progress',
-      createdAt: Date.now() - 1000000,
-    },
-    {
-      _id: uuidv4(),
-      description:
-        'Finished: Anim labore culpa commodo dolor velit adipisicing deserunt proident consectetur aliquip ut laborum.',
-      status: 'finished',
-      createdAt: Date.now() - 100000,
-    },
-  ],
+  entries: [],
 };
 
-export const postEntry = (
+export const refreshEntries = async (dispatch: Dispatch<EntriesActionType>) => {
+  const { data } = await entriesApi.get<IEntry[]>('/entries');
+  dispatch({ type: '[Entry] - GET', payload: data });
+};
+
+export const postEntry = async (
   description: string,
   dispatch: Dispatch<EntriesActionType>
 ) => {
-  const newEntry: IEntry = {
-    _id: uuidv4(),
-    description,
-    status: 'pending',
-    createdAt: Date.now(),
-  };
-
-  dispatch({ type: '[Entry] - POST', payload: newEntry });
+  try {
+    const { data } = await entriesApi.post<IEntry>('/entries', { description });
+    dispatch({ type: '[Entry] - POST', payload: data });
+  } catch (error) {
+    console.log({ error });
+  }
 };
 
-export const putEntry = (
-  entry: IEntry,
-  dispatch: Dispatch<EntriesActionType>
-) => dispatch({ type: '[Entry] - PUT', payload: entry });
+export const putEntry = async (
+  { _id, description, status }: IEntry,
+  dispatch: Dispatch<EntriesActionType>,
+  showSnackbar: boolean,
+  enqueueSnackbar: (
+    message: SnackbarMessage,
+    options?: OptionsObject
+  ) => SnackbarKey,
+  previousPage: VoidFunction
+) => {
+  try {
+    const { data } = await entriesApi.put<IEntry>(`/entries/${_id}`, {
+      description,
+      status,
+    });
+
+    dispatch({ type: '[Entry] - PUT', payload: data });
+
+    if (showSnackbar)
+      enqueueSnackbar('Entrada actualizada.', {
+        variant: 'success',
+        autoHideDuration: 1500,
+        anchorOrigin: {
+          vertical: 'top',
+          horizontal: 'right',
+        },
+      });
+    previousPage();
+  } catch (error) {
+    console.log({ error });
+  }
+};
+
+export const deleteEntry = async (
+  entryId: string,
+  dispatch: Dispatch<EntriesActionType>,
+  showSnackbar: boolean,
+  enqueueSnackbar: (
+    message: SnackbarMessage,
+    options?: OptionsObject
+  ) => SnackbarKey,
+  previousPage: VoidFunction
+) => {
+  try {
+    const { data } = await entriesApi.delete<IEntry>(`/entries/${entryId}`);
+
+    dispatch({ type: '[Entry] - DELETE', payload: data });
+
+    if (showSnackbar)
+      enqueueSnackbar('Entrada eliminada', {
+        variant: 'success',
+        autoHideDuration: 1500,
+        anchorOrigin: {
+          vertical: 'top',
+          horizontal: 'right',
+        },
+      });
+
+    previousPage();
+  } catch (error) {
+    console.log({ error });
+  }
+};
